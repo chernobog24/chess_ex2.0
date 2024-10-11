@@ -44,7 +44,8 @@ class PuzzleGenerator {
     return {
       fen: this.currentPuzzle.FEN,
       moves: this.currentPuzzle.Moves.split(' '),
-      tags: this.currentPuzzle.Themes.split(' ')
+      tags: this.currentPuzzle.Themes.split(' '),
+      elo: this.currentPuzzle.Rating
     };
   }
 
@@ -58,15 +59,6 @@ class PuzzleGenerator {
 
     const solutionMoves = this.currentPuzzle.Moves.split(' ');
     return moves.join(' ') === solutionMoves.join(' ');
-  }
-
-  getCurrentPuzzleDifficulty() {
-    if (!this.currentPuzzle) return null;
-
-    const rating = this.currentPuzzle.Rating;
-    if (rating >= 2000) return 'Hard';
-    if (rating >= 1500) return 'Medium';
-    return 'Easy';
   }
 
   getHint() {

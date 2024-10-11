@@ -27,19 +27,51 @@ class ChessPuzzleOverlay {
       }
       #puzzleContainer {
         background: white;
-        padding: 20px;
-        border-radius: 10px;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
       }
       #chessboard {
         width: 600px;
         height: 600px;
+        margin-bottom: 20px;
       }
       #puzzleInfo {
         text-align: center;
         margin-top: 20px;
+        font-family: Arial, sans-serif;
+      }
+      #puzzlePrompt {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      #puzzleElo {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 10px;
+      }
+      #timerDisplay {
+        font-size: 16px;
+        color: #333;
       }
       #closeOverlay {
-        margin-top: 10px;
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      #closeOverlay:hover {
+        background-color: #45a049;
+      }
+      #closeOverlay:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
       }
       .piece-417db {
         z-index: 10000 !important;
@@ -69,8 +101,8 @@ class ChessPuzzleOverlay {
         transform: translate(-50%, -50%);
         z-index: 10001;
         display: none;
-        width: 100px;  /* Adjust this value to make it bigger or smaller */
-        height: auto;  /* This maintains the aspect ratio */
+        width: 100px;
+        height: auto;
       }
     </style>
     <div id="chessOverlay">
@@ -78,16 +110,16 @@ class ChessPuzzleOverlay {
         <div id="chessboard"></div>
         <div id="puzzleInfo">
           <p id="puzzlePrompt">Solve the puzzle to continue browsing</p>
+          <p id="puzzleElo"></p>
           <p id="timerDisplay"></p>
         </div>
+        <button id="closeOverlay" disabled>Close</button>
       </div>
-      <button id="closeOverlay" disabled>Close</button>
       <video id="solvedAnimation" src="${this.solvedAnimationUrl}" muted></video>
     </div>
     `;
     document.body.insertAdjacentHTML('beforeend', overlayHTML);
   }
-
   initializeOverlay() {
     this.chessGame = new ChessGame('chessboard', {
       boardId: 'chessboard',
@@ -144,8 +176,8 @@ class ChessPuzzleOverlay {
   }
 
   updatePuzzleInfo(puzzle) {
-    const difficulty = this.puzzleGenerator.getCurrentPuzzleDifficulty();
-    document.getElementById('puzzlePrompt').textContent = `Solve this ${difficulty} puzzle to continue browsing`;
+    document.getElementById('puzzlePrompt').textContent = `Solve this puzzle to continue browsing`;
+    document.getElementById('puzzleElo').textContent = `Puzzle Elo: ${puzzle.elo}`;
   }
 
   startTimer() {

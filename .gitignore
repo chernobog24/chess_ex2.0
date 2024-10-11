@@ -1,5 +1,7 @@
+#Ignore repopack
+repopack-output.txt
 # Ignore Puzzles folder
-
+Puzzles/
 
 # Ignore common files
 .DS_Store
