@@ -1,0 +1,19 @@
+# Ignore Puzzles folder
+
+
+# Ignore common files
+.DS_Store
+Thumbs.db
+
+# Ignore node modules if you decide to use npm in the future
+node_modules/
+
+# Ignore any log files
+*.log
+
+# Ignore .vscode settings
+.vscode/
+
+# Ignore any sensitive or environment-specific files
+config.json
+secrets.json

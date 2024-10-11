@@ -1,0 +1,65 @@
+{
+    "manifest_version": 3,
+    "name": "Chessboard Popup",
+    "version": "2.0",
+    "description": "Chess puzzles and timed website breaks with interactive chessboard",
+    "icons": {
+      "16": "images/icon-16.png",
+      "32": "images/icon-32.png",
+      "48": "images/icon-48.png",
+      "128": "images/icon-128.png"
+    },
+    "action": {
+      "default_popup": "popup/popup.html",
+      "default_icon": {
+        "16": "images/icon-16.png",
+        "32": "images/icon-32.png",
+        "48": "images/icon-48.png",
+        "128": "images/icon-128.png"
+      }
+    },
+    "permissions": [
+      "storage",
+      "alarms",
+      "activeTab",
+      "tabs"
+    ],
+    "host_permissions": [
+      "*://blank.org/*"
+    ],
+    "background": {
+      "service_worker": "background/service-worker.js"
+    },
+    "options_page": "settings/settings.html",
+    "content_scripts": [
+      {
+        "matches": ["*://blank.org/*"],
+        "js": [
+          "libs/jquery.min.js",
+          "libs/chessboardjs-1.0.0/js/chessboard-1.0.0.min.js",
+          "libs/chess.js",
+          "scripts/chess-game.js",
+          "scripts/puzzle-generator.js",
+          "scripts/timer.js",
+          "overlay/overlay.js"
+        ],
+        "css": [
+          "libs/chessboardjs-1.0.0/css/chessboard-1.0.0.min.css",
+          "styles/chessboard.css"
+        ]
+      }
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "libs/chessboardjs-1.0.0/img/chesspieces/wikipedia/*",
+          "Puzzles/puzzles.json",
+          "overlay/overlay.html",
+          "images/solved.webm",
+          "overlay/overlay.css"
+        ],
+        "run_at": "document_end",
+        "matches": ["*://blank.org/*"]
+      }
+    ]
+  }
