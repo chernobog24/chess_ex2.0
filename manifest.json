@@ -25,7 +25,7 @@
       "tabs"
     ],
     "host_permissions": [
-      "*://blank.org/*"
+      "<all_urls>"
     ],
     "background": {
       "service_worker": "background/service-worker.js"
@@ -33,7 +33,7 @@
     "options_page": "settings/settings.html",
     "content_scripts": [
       {
-        "matches": ["*://blank.org/*"],
+        "matches": ["<all_urls>"],
         "js": [
           "libs/jquery.min.js",
           "libs/chessboardjs-1.0.0/js/chessboard-1.0.0.min.js",
@@ -59,7 +59,7 @@
           "overlay/overlay.css"
         ],
         "run_at": "document_end",
-        "matches": ["*://blank.org/*"]
+        "matches": ["<all_urls>"]
       }
     ]
   }

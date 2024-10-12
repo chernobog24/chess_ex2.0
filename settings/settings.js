@@ -66,7 +66,7 @@ function removeWebsite(site) {
 }
 
 function generateTimeOptions() {
-  let options = '';
+  let options = '<option value="1">1</option>';
   for (let i = 5; i <= 60; i += 5) {
     options += `<option value="${i}">${i}</option>`;
   }

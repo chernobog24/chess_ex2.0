@@ -129,9 +129,10 @@ class ChessPuzzleOverlay {
   }
 
   closeOverlay() {
-    if (this.puzzleSolved || document.getElementById('closeOverlay').disabled === false) {
-      document.getElementById('chessOverlay').style.display = 'none';
-      chrome.runtime.sendMessage({action: "overlayCompleted", solved: this.puzzleSolved});
+    if (this.puzzleSolved) {
+      document.getElementById('chessOverlay').remove();
+      chrome.runtime.sendMessage({action: "overlayCompleted", solved: true});
+      chessPuzzleOverlay = null;  // Reset the global reference
     }
   }
 
@@ -159,9 +160,10 @@ let chessPuzzleOverlay = null;
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("Received message:", request);
   if (request.action === "showOverlay") {
-    if (!chessPuzzleOverlay) {
-      chessPuzzleOverlay = new ChessPuzzleOverlay();
+    if (chessPuzzleOverlay) {
+      chessPuzzleOverlay.closeOverlay();  // Remove existing overlay if present
     }
+    chessPuzzleOverlay = new ChessPuzzleOverlay();
     chessPuzzleOverlay.showOverlay();
   }
 });
