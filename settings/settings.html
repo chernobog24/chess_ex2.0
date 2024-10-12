@@ -1,21 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Limit Settings - Chess Puzzle Extension</title>
   <link rel="stylesheet" href="settings.css">
 </head>
 <body>
-  <h1>Settings</h1>
-  <div id="websiteManager">
-    <input type="text" id="websiteInput" placeholder="Enter website URL">
-    <button id="addWebsite">Add</button>
-    <ul id="websiteList"></ul>
+  <div class="container">
+    <h1><span class="icon">⏱</span> Limit settings</h1>
+    
+    <div class="info-bar">
+      math and coding challnges coming soon?<a href="#">Support devs</a>.
+    </div>
+    
+    <div class="setting">
+      <div class="setting-text">
+        <h2>Show timer</h2>
+        <p>Display a timer for time left on websites</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="showTimer" checked>
+        <span class="slider round"></span>
+      </label>
+    </div>
+    
+    <div class="setting">
+      <div class="setting-text">
+        <h2>Add website</h2>
+        <p>Add a new website to the list below</p>
+      </div>
+      <div class="add-website">
+        <input type="text" id="websiteInput" placeholder="Enter website URL">
+        <button id="addWebsite">Add Website</button>
+      </div>
+    </div>
+    
+    <div class="setting">
+      <div class="setting-text">
+        <h2>Daily website limits</h2>
+        <p>Set time limit per session and maximum number of sessions for each site.</p>
+      </div>
+      <ul id="websiteList" class="website-list"></ul>
+    </div>
+    
+    <div class="footer">
+      Enjoying Limit? <a href="#">Please leave us a rating and review</a>
+      <span class="powered-by">powered by <a href="#">ADHD</a></span>
+    </div>
   </div>
-  <div id="timerSetting">
-    <label for="timerDuration">Timer Duration (minutes):</label>
-    <input type="number" id="timerDuration" min="1" max="120">
-  </div>
-  <button id="saveSettings">Save</button>
-  <button id="resetSettings">Reset to Default</button>
   <script src="settings.js"></script>
 </body>
-</html>
+</html>S

@@ -1,12 +1,10 @@
 document.addEventListener('DOMContentLoaded', loadSettings);
 document.getElementById('addWebsite').addEventListener('click', addWebsite);
-document.getElementById('saveSettings').addEventListener('click', saveSettings);
-document.getElementById('resetSettings').addEventListener('click', resetSettings);
 
 function loadSettings() {
-  chrome.storage.sync.get(['websites', 'timerDuration'], (data) => {
+  chrome.storage.sync.get(['websites', 'showTimer'], (data) => {
     if (data.websites) updateWebsiteList(data.websites);
-    if (data.timerDuration) document.getElementById('timerDuration').value = data.timerDuration;
+    if (data.showTimer !== undefined) document.getElementById('showTimer').checked = data.showTimer;
   });
 }
 
@@ -21,6 +19,8 @@ function addWebsite() {
           updateWebsiteList(data.websites);
           input.value = '';
         });
+      } else {
+        alert('This website is already in the list.');
       }
     });
   }
@@ -31,12 +31,28 @@ function updateWebsiteList(websites) {
   list.innerHTML = '';
   websites.forEach(site => {
     const li = document.createElement('li');
-    li.textContent = site;
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent = 'Remove';
-    removeBtn.onclick = () => removeWebsite(site);
-    li.appendChild(removeBtn);
+    li.innerHTML = `
+      <span>${site}</span>
+      <div class="website-controls">
+        <select class="time-select">
+          ${generateTimeOptions()}
+        </select>
+        <span>min/session</span>
+        <select class="session-select">
+          ${generateSessionOptions()}
+        </select>
+        <span>sessions/day</span>
+        <button class="remove-website" data-site="${site}">✖</button>
+      </div>
+    `;
     list.appendChild(li);
+  });
+  
+  // Add event listeners to remove buttons
+  document.querySelectorAll('.remove-website').forEach(btn => {
+    btn.addEventListener('click', function() {
+      removeWebsite(this.getAttribute('data-site'));
+    });
   });
 }
 
@@ -49,20 +65,23 @@ function removeWebsite(site) {
   });
 }
 
-function saveSettings() {
-  const timerDuration = document.getElementById('timerDuration').value;
-  chrome.storage.sync.set({timerDuration: parseInt(timerDuration)}, () => {
-    alert('Settings saved');
-  });
+function generateTimeOptions() {
+  let options = '';
+  for (let i = 5; i <= 60; i += 5) {
+    options += `<option value="${i}">${i}</option>`;
+  }
+  return options;
 }
 
-function resetSettings() {
-  const defaultSettings = {
-    websites: [],
-    timerDuration: 30
-  };
-  chrome.storage.sync.set(defaultSettings, () => {
-    loadSettings();
-    alert('Settings reset to default');
-  });
+function generateSessionOptions() {
+  let options = '';
+  for (let i = 1; i <= 10; i++) {
+    options += `<option value="${i}">${i}</option>`;
+  }
+  return options;
 }
+
+// Save showTimer setting when toggled
+document.getElementById('showTimer').addEventListener('change', function() {
+  chrome.storage.sync.set({showTimer: this.checked});
+});
