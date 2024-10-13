@@ -18,7 +18,7 @@ body {
 
 h1 {
   color: #fff;
-  background-color: #8bc34a;
+  background-color: #4a90e2;
   padding: 20px;
   margin: -20px -20px 20px -20px;
   border-radius: 5px 5px 0 0;
@@ -29,16 +29,14 @@ h1 {
 }
 
 .info-bar {
-  background-color: #f1f1f1;
-  padding: 10px;
+  background-color: #e8f4fd;
+  padding: 15px;
   margin-bottom: 20px;
   border-radius: 5px;
+  border-left: 5px solid #4a90e2;
 }
 
 .setting {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1px solid #eee;
@@ -90,7 +88,7 @@ h1 {
 }
 
 input:checked + .slider {
-  background-color: #8bc34a;
+  background-color: #4a90e2;
 }
 
 input:checked + .slider:before {
@@ -103,6 +101,28 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+.global-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.global-controls label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.global-controls input {
+  width: 60px;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
 }
 
 .add-website {
@@ -118,7 +138,7 @@ input:checked + .slider:before {
 
 #addWebsite {
   padding: 10px 20px;
-  background-color: #8bc34a;
+  background-color: #4a90e2;
   color: white;
   border: none;
   border-radius: 0 5px 5px 0;
@@ -131,31 +151,43 @@ input:checked + .slider:before {
 }
 
 .website-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
+  background-color: #f9f9f9;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
 }
 
-.website-list li:last-child {
-  border-bottom: none;
+.website-list h3 {
+  margin-top: 0;
+  color: #4a90e2;
 }
 
 .website-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.website-controls label {
   display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.website-controls select {
-  margin: 0 10px;
+.website-controls input {
+  width: 60px;
   padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
 }
 
 .remove-website {
-  background: none;
+  grid-column: 1 / -1;
+  background-color: #e74c3c;
+  color: white;
   border: none;
-  color: #e74c3c;
+  padding: 5px 10px;
+  border-radius: 3px;
   cursor: pointer;
 }
 
@@ -165,13 +197,8 @@ input:checked + .slider:before {
   color: #666;
 }
 
-.powered-by {
-  display: block;
-  margin-top: 10px;
-}
-
 a {
-  color: #8bc34a;
+  color: #4a90e2;
   text-decoration: none;
 }
 

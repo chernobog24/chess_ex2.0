@@ -150,7 +150,6 @@ class ChessPuzzleOverlay {
   }
 
   skipPuzzle() {
-    this.endPuzzle(false);
     this.loadNewPuzzle();
   }
 }

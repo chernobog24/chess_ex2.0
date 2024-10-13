@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Limit Settings - Chess Puzzle Extension</title>
+  <title>Settings - Chess Puzzle Extension</title>
   <link rel="stylesheet" href="settings.css">
 </head>
 <body>
   <div class="container">
-    <h1><span class="icon">⏱</span> Limit settings</h1>
+    <h1><span class="icon">⚙️</span> Chess Puzzle Extension Settings</h1>
     
     <div class="info-bar">
-      math and coding challnges coming soon?<a href="#">Support devs</a>.
+      This extension presents chess puzzles that increase in difficulty as you use a website. Solve puzzles to gain time, but be careful - mistakes will cost you!
     </div>
     
     <div class="setting">
@@ -27,6 +27,21 @@
     
     <div class="setting">
       <div class="setting-text">
+        <h2>Global Settings</h2>
+        <p>Configure global puzzle and time settings.</p>
+      </div>
+      <div id="globalSettings" class="global-controls">
+        <label>Min ELO: <input type="number" id="minElo" min="500" max="3000"></label>
+        <label>Max ELO: <input type="number" id="maxElo" min="500" max="3000"></label>
+        <label>Time bonus (seconds): <input type="number" id="timeBonus" min="0" max="60"></label>
+        <label>Wrong move penalty (seconds): <input type="number" id="wrongMovePenalty" min="0" max="60"></label>
+        <label>Hint penalty (seconds): <input type="number" id="hintPenalty" min="0" max="60"></label>
+        <label>Skip penalty (seconds): <input type="number" id="skipPenalty" min="0" max="60"></label>
+      </div>
+    </div>
+    
+    <div class="setting">
+      <div class="setting-text">
         <h2>Add website</h2>
         <p>Add a new website to the list below</p>
       </div>
@@ -38,17 +53,16 @@
     
     <div class="setting">
       <div class="setting-text">
-        <h2>Daily website limits</h2>
-        <p>Set time limit per session and maximum number of sessions for each site.</p>
+        <h2>Website Settings</h2>
+        <p>Configure session settings for each website.</p>
       </div>
       <ul id="websiteList" class="website-list"></ul>
     </div>
     
     <div class="footer">
-      Enjoying Limit? <a href="#">Please leave us a rating and review</a>
-      <span class="powered-by">powered by <a href="#">ADHD</a></span>
+      Enjoying the Chess Puzzle Extension? <a href="#">Please leave us a rating and review</a>
     </div>
   </div>
   <script src="settings.js"></script>
 </body>
-</html>S
+</html>
