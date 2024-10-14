@@ -131,7 +131,7 @@ class ChessPuzzleOverlay {
   closeOverlay() {
     if (this.puzzleSolved) {
       document.getElementById('chessOverlay').remove();
-      chrome.runtime.sendMessage({action: "overlayCompleted", solved: true});
+      chrome.runtime.sendMessage({target: 'background', action: "overlayCompleted", solved: true});
       chessPuzzleOverlay = null;  // Reset the global reference
     }
   }
@@ -158,7 +158,7 @@ let chessPuzzleOverlay = null;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("Received message:", request);
-  if (request.action === "showOverlay") {
+  if (request.target === 'overlay' && request.action === "showOverlay") {
     if (chessPuzzleOverlay) {
       chessPuzzleOverlay.closeOverlay();  // Remove existing overlay if present
     }

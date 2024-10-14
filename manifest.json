@@ -41,6 +41,7 @@
           "scripts/chess-game.js",
           "scripts/puzzle-generator.js",
           "scripts/timer.js",
+          "overlay/timerBar.js",
           "overlay/overlay.js"
         ],
         "css": [
