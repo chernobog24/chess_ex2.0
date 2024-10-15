@@ -4,14 +4,15 @@ const state = {
   settings: {
     websites: [],
     globalSettings: {
-      minElo: 800,
-      maxElo: 2000,
+      minElo: 1000,
+      maxElo: 1900,
       timeBonus: 2,
       wrongMovePenalty: 1,
       hintPenalty: 1,
       skipPenalty: 2
     }
-  }
+  },
+  sessions: {}
 };
 
 // Initialization
@@ -35,6 +36,28 @@ function loadSettings() {
     if (data.websites) state.settings.websites = data.websites;
     if (data.globalSettings) state.settings.globalSettings = data.globalSettings;
     console.log('Settings loaded:', state.settings);
+
+    // Load sessions from local storage
+    chrome.storage.local.get(['sessions'], (result) => {
+      if (result.sessions) {
+        state.sessions = result.sessions;
+        console.log('Sessions loaded from storage');
+      } else {
+        console.log('No saved sessions found, initializing empty sessions');
+      }
+
+      // Initialize or update session counters
+      state.settings.websites.forEach(website => {
+        if (!state.sessions[website.url]) {
+          state.sessions[website.url] = {
+            count: 0,
+            lastResetDate: new Date().toDateString()
+          };
+        }
+      });
+
+      console.log('Sessions initialized:', state.sessions);
+    });
   });
 }
 
@@ -45,25 +68,61 @@ function handleTabUpdate(tabId, changeInfo, tab) {
     const website = findMatchingWebsite(tab.url);
     if (website) {
       console.log(`Monitored website detected: ${website.url}`);
+      updateSessionCount(website);
       checkPuzzleRequirement(tabId, website);
-      updateTimerBar(tabId, website);  // Changed from initializeTimerBar
+      updateTimerBar(tabId, website);
     }
   }
 }
+
 function findMatchingWebsite(url) {
   return state.settings.websites.find(site => url.includes(site.url));
 }
 
+function updateSessionCount(website) {
+  const today = new Date().toDateString();
+  const websiteTimer = state.websiteTimers[website.url];
+
+  // Only update if there's no active timer
+  if (!websiteTimer || websiteTimer.status !== 'active') {
+    if (state.sessions[website.url].lastResetDate !== today) {
+      state.sessions[website.url] = {
+        count: 0,
+        lastResetDate: today
+      };
+    }
+    if (state.sessions[website.url].count < website.sessions) {
+      state.sessions[website.url].count++;
+    }
+
+    // Save the updated state to Chrome's storage
+    chrome.storage.local.set({ sessions: state.sessions }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('Error saving sessions:', chrome.runtime.lastError);
+      } else {
+        console.log('Sessions saved successfully');
+      }
+    });
+  }
+}
 // Puzzle management
 function checkPuzzleRequirement(tabId, website) {
   console.log(`Checking puzzle requirement for website: ${website.url}`);
   const timer = state.websiteTimers[website.url];
   if (!timer || timer.status === 'expired') {
     console.log(`Puzzle required for website ${website.url}. Reason: ${!timer ? 'New session' : 'Session expired'}`);
-    chrome.tabs.sendMessage(tabId, { target: 'overlay', action: "showOverlay", reason: "start" });
+    sendOverlayMessage(tabId, "start", website.url);
   } else if (timer.status === 'active') {
     console.log(`Active session for website ${website.url}. No puzzle required.`);
   }
+}
+
+function calculateCurrentElo(website) {
+  const { minElo, maxElo } = state.settings.globalSettings;
+  const sessionProgress = state.sessions[website.url].count / website.sessions;
+  console.log(`Session progress for ${website.url}: ${sessionProgress}`)
+  console.log(`Elo set to ${minElo + (maxElo - minElo) * sessionProgress}`)
+  return Math.round(minElo + (maxElo - minElo) * sessionProgress);
 }
 
 // Timer management
@@ -111,10 +170,30 @@ function getTimerStatus(websiteUrl) {
 }
 
 // Notification management
+function sendOverlayMessage(tabId, reason, websiteUrl) {
+  const website = findMatchingWebsite(websiteUrl);
+  if (website) {
+    const currentElo = calculateCurrentElo(website);
+    const overlayData = {
+      currentElo,
+      currentSession: state.sessions[website.url].count,
+      maxSessions: website.sessions,
+      globalSettings: state.settings.globalSettings,
+      websiteSettings: website
+    };
+    chrome.tabs.sendMessage(tabId, { 
+      target: 'overlay', 
+      action: "showOverlay", 
+      reason: reason,
+      data: overlayData
+    });
+  }
+}
+
 function notifyAllTabs(websiteUrl) {
   chrome.tabs.query({url: `*://${websiteUrl}/*`}, (tabs) => {
     tabs.forEach(tab => {
-      chrome.tabs.sendMessage(tab.id, { target: 'overlay', action: "showOverlay", reason: "timeUp" });
+      sendOverlayMessage(tab.id, "timeUp", websiteUrl);
     });
   });
 }
@@ -127,10 +206,13 @@ function handleMessage(request, sender, sendResponse) {
       handleOverlayCompleted(sender, request, sendResponse);
       break;
     case "getTimerStatus":
-      handleGetTimerStatus(sender, sendResponse);
+      handleGetTimerStatus(sendResponse);
+      break;
+    case "triggerOverlay":
+      handleTriggerOverlay(sendResponse);
       break;
   }
-  return true; // Required for sendResponse to work
+  return true;
 }
 
 function handleOverlayCompleted(sender, request, sendResponse) {
@@ -140,26 +222,45 @@ function handleOverlayCompleted(sender, request, sendResponse) {
     if (website) {
       console.log(`Puzzle solved for website: ${website.url}`);
       startTimer(website);
-      updateTimerBar(sender.tab.id, website);  // Changed from initializeTimerBar
+      updateTimerBar(sender.tab.id, website);
       sendResponse({ status: "Timer started" });
     }
   }
 }
-function handleGetTimerStatus(sender, sendResponse) {
-  if (sender.tab) {
-    const websiteUrl = new URL(sender.tab.url).hostname;
-    const website = findMatchingWebsite(websiteUrl);
-    if (website) {
-      const remainingTime = getTimerStatus(website.url);
-      console.log(`Timer status requested for website ${website.url}. Remaining time: ${remainingTime} minutes`);
-      sendResponse({ status: `Time remaining: ${remainingTime} minutes` });
+
+function handleGetTimerStatus(sendResponse) {
+  chrome.tabs.query({active: true, currentWindow: true}, ([tab]) => {
+    if (tab) {
+      const websiteUrl = new URL(tab.url).hostname;
+      const website = findMatchingWebsite(websiteUrl);
+      if (website) {
+        const remainingTime = getTimerStatus(website.url);
+        console.log(`Timer status requested for website ${website.url}. Remaining time: ${remainingTime} minutes`);
+        sendResponse({ status: `Time remaining: ${remainingTime} minutes` });
+      } else {
+        sendResponse({ status: "No active timer for this website" });
+      }
     } else {
-      sendResponse({ status: "No active timer for this website" });
+      sendResponse({ status: "No active tab" });
     }
-  } else {
-    console.log('Timer status requested, but no tab information available');
-    sendResponse({ status: "No active timer" });
-  }
+  });
+}
+
+function handleTriggerOverlay(sendResponse) {
+  chrome.tabs.query({active: true, currentWindow: true}, ([tab]) => {
+    if (tab) {
+      const websiteUrl = new URL(tab.url).hostname;
+      const website = findMatchingWebsite(websiteUrl);
+      if (website) {
+        sendOverlayMessage(tab.id, "start", websiteUrl);
+        sendResponse({ status: "Overlay triggered" });
+      } else {
+        sendResponse({ status: "Website not monitored" });
+      }
+    } else {
+      sendResponse({ status: "No active tab" });
+    }
+  });
 }
 
 // Tab removal handling

@@ -1,8 +1,7 @@
 class PuzzleGenerator {
   constructor() {
-    this.puzzles = [];
+    this.puzzles = {};
     this.currentPuzzle = null;
-    this.usedPuzzles = new Set();
     this.loaded = false;
 
     this.loadPuzzles();
@@ -14,7 +13,7 @@ class PuzzleGenerator {
       .then(data => {
         this.puzzles = data;
         this.loaded = true;
-        console.log('Puzzles loaded:', this.puzzles.length);
+        console.log('Puzzles loaded:', Object.keys(this.puzzles).length, 'ELO ranges');
       })
       .catch(err => {
         console.error('Failed to load puzzles:', err);
@@ -22,43 +21,31 @@ class PuzzleGenerator {
       });
   }
 
-  async getRandomPuzzle() {
+  async getRandomPuzzle(elo) {
     if (!this.loaded) {
       await this.loadPuzzles();
     }
 
-    console.log('Puzzles available:', this.puzzles.length);
-    if (this.puzzles.length === 0) {
-      this.resetPuzzles();
+    const roundedElo = Math.floor(elo / 100) * 100;
+    const eloRange = `${roundedElo}-${roundedElo + 99}`;
+
+    if (!this.puzzles[eloRange] || this.puzzles[eloRange].length === 0) {
+      throw new Error(`No puzzles available for ELO range ${eloRange}`);
     }
 
-    if (this.puzzles.length === 0) {
-      throw new Error('No puzzles available');
-    }
+    const puzzlesInRange = this.puzzles[eloRange];
+    const index = Math.floor(Math.random() * puzzlesInRange.length);
+    this.currentPuzzle = puzzlesInRange[index];
 
-    const index = Math.floor(Math.random() * this.puzzles.length);
-    this.currentPuzzle = this.puzzles.splice(index, 1)[0];
-    this.usedPuzzles.add(this.currentPuzzle);
     console.log('Current puzzle:', this.currentPuzzle);
     console.log('Moves:', this.currentPuzzle.Moves);
+
     return {
       fen: this.currentPuzzle.FEN,
       moves: this.currentPuzzle.Moves.split(' '),
       tags: this.currentPuzzle.Themes.split(' '),
       elo: this.currentPuzzle.Rating
     };
-  }
-
-  resetPuzzles() {
-    this.puzzles = [...this.usedPuzzles];
-    this.usedPuzzles.clear();
-  }
-
-  checkSolution(moves) {
-    if (!this.currentPuzzle) return false;
-
-    const solutionMoves = this.currentPuzzle.Moves.split(' ');
-    return moves.join(' ') === solutionMoves.join(' ');
   }
 
   getHint() {

@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import json
+from collections import defaultdict
 
 # Get the current script's directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -66,7 +68,34 @@ def create_sample_database(input_file, output_file, n_samples):
     print(f"New file size: {get_file_size(output_file):.2f} MB")
     print(f"Number of puzzles in sampled database: {len(sampled_df)}")
 
+def sort_puzzles_by_elo(input_file, output_file):
+    # Read the JSON file
+    with open(input_file, 'r') as f:
+        puzzles = json.load(f)
+
+    # Create a defaultdict to store puzzles by ELO group
+    elo_groups = defaultdict(list)
+
+    # Sort puzzles into ELO groups
+    for puzzle in puzzles:
+        elo = puzzle['Rating']
+        group = (elo // 100) * 100  # Round down to nearest 100
+        elo_groups[group].append(puzzle)
+
+    # Create the output structure
+    output = {}
+    for group, puzzles in sorted(elo_groups.items()):
+        output[f"{group}-{group+99}"] = puzzles
+
+    # Write the sorted puzzles to a new JSON file
+    with open(output_file, 'w') as f:
+        json.dump(output, f, indent=2)
+
 # Create the sample database
-input_file = os.path.join(script_dir, 'trimmed_lichess_db_puzzle.csv')
-output_file = os.path.join(script_dir, 'sampled_lichess_db_puzzle.csv')
-create_sample_database(input_file, output_file, 150000)
+#input_file = os.path.join(script_dir, 'trimmed_lichess_db_puzzle.csv')
+#output_file = os.path.join(script_dir, 'sampled_lichess_db_puzzle.csv')
+#create_sample_database(input_file, output_file, 150000)
+# sort the JSON file once created
+input_file = os.path.join(script_dir, 'puzzles.json')
+output_file = os.path.join(script_dir, 'sorted_puzzle.json')
+sort_puzzles_by_elo(input_file, output_file)

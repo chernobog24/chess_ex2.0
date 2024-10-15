@@ -1,39 +1,42 @@
 class ChessPuzzleOverlay {
-  constructor() {
+  constructor(overlayData) {
+    // Initialize core components
     this.chessGame = null;
     this.puzzleGenerator = null;
-    this.timer = null;
-    this.puzzleSolved = false;
     this.solvedAnimationUrl = chrome.runtime.getURL('images/solved.webm');
+    
+    // Set up data from service worker
+    this.currentElo = overlayData.currentElo;
+    this.currentSession = overlayData.currentSession;
+    this.maxSessions = overlayData.maxSessions;
+    this.globalSettings = overlayData.globalSettings;
+    this.websiteSettings = overlayData.websiteSettings;
+    
+    // Initialize state variables
+    this.puzzleSolved = false;
+    this.timeAdded = 0;
+    this.timerInterval = null;
   }
 
+  // Overlay Setup
   async injectOverlay() {
     console.log("Injecting overlay");
-    
     try {
-      // Load HTML
       const htmlUrl = chrome.runtime.getURL('overlay/overlay.html');
-      const htmlResponse = await fetch(htmlUrl);
-      const htmlText = await htmlResponse.text();
-
-      // Load CSS
       const cssUrl = chrome.runtime.getURL('overlay/overlay.css');
-      const cssResponse = await fetch(cssUrl);
-      const cssText = await cssResponse.text();
+      const [htmlResponse, cssResponse] = await Promise.all([
+        fetch(htmlUrl),
+        fetch(cssUrl)
+      ]);
+      const [htmlText, cssText] = await Promise.all([
+        htmlResponse.text(),
+        cssResponse.text()
+      ]);
 
-      // Combine HTML and CSS
-      const combinedHTML = `
-        <style>${cssText}</style>
-        ${htmlText}
-      `;
-
-      // Inject the combined HTML and CSS into the page
+      const combinedHTML = `<style>${cssText}</style>${htmlText}`;
       document.body.insertAdjacentHTML('beforeend', combinedHTML);
 
-      // Set the solved animation URL
       document.getElementById('solvedAnimation').src = this.solvedAnimationUrl;
-
-      // Initialize event listeners and other necessary setup
       this.initializeOverlayElements();
     } catch (error) {
       console.error('Error injecting overlay:', error);
@@ -41,45 +44,22 @@ class ChessPuzzleOverlay {
   }
 
   initializeOverlayElements() {
-    document.getElementById('closeOverlay').addEventListener('click', this.closeOverlay.bind(this));
-    document.getElementById('showHint').addEventListener('click', this.showHint.bind(this));
-    document.getElementById('undoMove').addEventListener('click', this.undoMove.bind(this));
-    document.getElementById('redoMove').addEventListener('click', this.redoMove.bind(this));
-    document.getElementById('skipPuzzle').addEventListener('click', this.skipPuzzle.bind(this));
+    const elements = ['closeOverlay', 'showHint', 'undoMove', 'redoMove', 'skipPuzzle'];
+    elements.forEach(id => {
+      document.getElementById(id).addEventListener('click', this[id].bind(this));
+    });
   }
 
   initializeOverlay() {
     this.chessGame = new ChessGame('chessboard', {
       boardId: 'chessboard',
       onMove: this.onMove.bind(this),
-      onPuzzleSolved: this.onPuzzleSolved.bind(this)
+      onPuzzleSolved: this.onPuzzleSolved.bind(this),
+      onWrongMove: this.onWrongMove.bind(this)
     });
     this.chessGame.init();
     this.puzzleGenerator = new PuzzleGenerator();
-  }
-
-  onMove(move) {
-    // This method can be used for any additional logic needed after a move
-    // The correctness of the move is now handled in the ChessGame class
-  }
-
-  onPuzzleSolved() {
-    this.endPuzzle(true);
-    this.playSolvedAnimation();
-  }
-
-  playSolvedAnimation() {
-    const video = document.getElementById('solvedAnimation');
-    video.style.display = 'block';
-    video.currentTime = 0;  // Reset to the beginning
-    video.play().then(() => {
-      video.onended = () => {
-        video.style.display = 'none';
-      };
-    }).catch(error => {
-      console.error('Error playing video:', error);
-      video.style.display = 'none';
-    });
+    this.updateSessionInfo();
   }
 
   async showOverlay() {
@@ -89,16 +69,16 @@ class ChessPuzzleOverlay {
     this.loadNewPuzzle();
     this.startTimer();
   }
-
+   
+  // Puzzle Management
   async loadNewPuzzle() {
     try {
-      const puzzle = await this.puzzleGenerator.getRandomPuzzle();
+      const puzzle = await this.puzzleGenerator.getRandomPuzzle(this.currentElo);
       this.chessGame.setPuzzle(puzzle.fen, puzzle.moves);
-      this.puzzleSolved = false;
       this.updatePuzzleInfo(puzzle);
     } catch (error) {
       console.error('Error loading puzzle:', error);
-      // Handle the error appropriately (e.g., show a message to the user)
+      document.getElementById('puzzlePrompt').textContent = 'Error loading puzzle. Please try again.';
     }
   }
 
@@ -107,38 +87,63 @@ class ChessPuzzleOverlay {
     document.getElementById('puzzleElo').textContent = `Puzzle Elo: ${puzzle.elo}`;
   }
 
+   
+  // Timer Management
   startTimer() {
-    let timeLeft = 300; // 5 minutes
-    this.timer = setInterval(() => {
-      timeLeft--;
-      document.getElementById('timerDisplay').textContent = `Time left: ${timeLeft}s`;
-      if (timeLeft <= 0) {
-        this.endPuzzle(false);
-      }
-    }, 1000);
+    this.timeAdded = 0;
+    this.updateTimerDisplay();
+    this.timerInterval = setInterval(() => this.updateTimerDisplay(), 1000);
   }
 
-  endPuzzle(solved) {
-    clearInterval(this.timer);
-    this.puzzleSolved = solved;
-    document.getElementById('closeOverlay').disabled = false;
-    document.getElementById('puzzlePrompt').textContent = solved ? 'Puzzle solved! You can close the overlay.' : 'Time\'s up! You can close the overlay.';
-    if (solved) {
-      this.playSolvedAnimation();
-    }
+  updateTimerDisplay() {
+    document.getElementById('timerDisplay').textContent = `Time added: ${this.timeAdded}s`;
   }
 
+  applyTimeBonus(seconds) {
+    this.timeAdded += seconds;
+    this.updateTimerDisplay();
+  }
+
+  applyTimePenalty(seconds) {
+    this.timeAdded = Math.max(0, this.timeAdded - seconds);
+    this.updateTimerDisplay();
+  }
+
+   
+  // Event Handlers
+  onMove(move) {
+    // Additional logic for move events can be added here
+  }
+
+  onWrongMove() {
+    this.applyTimePenalty(this.globalSettings.wrongMovePenalty);
+  }
+
+  onPuzzleSolved() {
+    this.endPuzzle(true);
+    this.playSolvedAnimation();
+    this.applyTimeBonus(this.globalSettings.timeBonus);
+  }
+
+   
+  // User Actions
   closeOverlay() {
     if (this.puzzleSolved) {
       document.getElementById('chessOverlay').remove();
-      chrome.runtime.sendMessage({target: 'background', action: "overlayCompleted", solved: true});
-      chessPuzzleOverlay = null;  // Reset the global reference
+      chrome.runtime.sendMessage({
+        target: 'background', 
+        action: "overlayCompleted", 
+        solved: true,
+        timeAdded: this.timeAdded
+      });
+      chessPuzzleOverlay = null;
     }
   }
 
   showHint() {
-    const hint = this.puzzleGenerator.getHint();
-    alert(hint); // You might want to display this in a more user-friendly way
+    const hint = this.chessGame.getHint();
+    this.applyTimePenalty(this.globalSettings.hintPenalty);
+    // TODO: Implement hint display logic (e.g., highlight the piece to move)
   }
 
   undoMove() {
@@ -150,20 +155,61 @@ class ChessPuzzleOverlay {
   }
 
   skipPuzzle() {
+    if (!this.puzzleSolved) {
+      this.applyTimePenalty(this.globalSettings.skipPenalty);
+    }
     this.loadNewPuzzle();
+  }
+
+  // UI Updates
+  updateSessionInfo() {
+    const sessionInfoElement = document.getElementById('sessionInfo');
+    if (sessionInfoElement) {
+      sessionInfoElement.textContent = `Session ${this.currentSession}/${this.maxSessions} | Current ELO: ${this.currentElo}`;
+    }
+  }
+
+  playSolvedAnimation() {
+    const video = document.getElementById('solvedAnimation');
+    video.style.display = 'block';
+    video.currentTime = 0;
+    video.play().then(() => {
+      video.onended = () => {
+        video.style.display = 'none';
+      };
+    }).catch(error => {
+      console.error('Error playing video:', error);
+      video.style.display = 'none';
+    });
+  }
+
+  endPuzzle(solved) {
+    clearInterval(this.timerInterval);
+    this.puzzleSolved = solved;
+    document.getElementById('closeOverlay').disabled = false;
+    document.getElementById('puzzlePrompt').textContent = solved 
+      ? 'Puzzle solved! You can close the overlay.' 
+      : 'Time\'s up! You can close the overlay.';
+    if (solved) {
+      this.playSolvedAnimation();
+    }
   }
 }
 
+ 
+// Global Event Listener
 let chessPuzzleOverlay = null;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("Received message:", request);
-  if (request.target === 'overlay' && request.action === "showOverlay") {
-    if (chessPuzzleOverlay) {
-      chessPuzzleOverlay.closeOverlay();  // Remove existing overlay if present
+  if (request.target === 'overlay') {
+    console.log("Received message by overlay:", request);
+    if (request.action === "showOverlay") {
+      if (chessPuzzleOverlay) {
+        chessPuzzleOverlay.closeOverlay();
+      }
+      chessPuzzleOverlay = new ChessPuzzleOverlay(request.data);
+      chessPuzzleOverlay.showOverlay();
     }
-    chessPuzzleOverlay = new ChessPuzzleOverlay();
-    chessPuzzleOverlay.showOverlay();
   }
 });
 

@@ -1,14 +1,8 @@
-document.getElementById('settingsBtn').addEventListener('click', () => {
-  chrome.runtime.openOptionsPage();
-});
+document.getElementById('settingsBtn').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
-document.getElementById('triggerOverlayBtn').addEventListener('click', () => {
-  chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, {target: 'overlay', action: "showOverlay"});
-  });
-});
+document.getElementById('triggerOverlayBtn').addEventListener('click', () => 
+  chrome.runtime.sendMessage({action: "triggerOverlay"}));
 
-// Fetch and display timer status
-chrome.runtime.sendMessage({target: 'background', action: "getTimerStatus"}, (response) => {
+chrome.runtime.sendMessage({action: "getTimerStatus"}, (response) => {
   document.getElementById('timerStatus').textContent = response.status;
 });
