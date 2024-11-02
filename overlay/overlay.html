@@ -1,19 +1,21 @@
-<div id="chessOverlay">
-  <div id="puzzleContainer">
-    <div id="timerDisplay"></div>
-    <div id="sessionInfo"></div>
-    <div id="chessboard"></div>
-    <div id="puzzleInfo">
-      <p id="puzzlePrompt">Solve the puzzle to continue browsing</p>
-      <p id="puzzleElo"></p>
+<div class="chess-puzzle-overlay">
+  <div id="chessOverlay">
+    <div id="puzzleContainer">
+      <div id="timerDisplay"></div>
+      <div id="sessionInfo"></div>
+      <div id="chessboard"></div>
+      <div id="puzzleInfo">
+        <p id="puzzlePrompt">Solve the puzzle to continue browsing</p>
+        <p id="puzzleElo"></p>
+      </div>
+      <button id="closeOverlay" class="button" disabled>Close</button>
+      <div id="controlBar">
+        <button id="showHint" class="button">Show Hint</button>
+        <button id="undoMove" class="button">Undo</button>
+        <button id="redoMove" class="button">Redo</button>
+        <button id="skipPuzzle" class="button">Skip Puzzle</button>
+      </div>
     </div>
-    <button id="closeOverlay" class="button" disabled>Close</button>
-    <div id="controlBar">
-      <button id="showHint" class="button">Show Hint</button>
-      <button id="undoMove" class="button">Undo</button>
-      <button id="redoMove" class="button">Redo</button>
-      <button id="skipPuzzle" class="button">Skip Puzzle</button>
-    </div>
+    <video id="solvedAnimation" muted></video>
   </div>
-  <video id="solvedAnimation" muted></video>
 </div>

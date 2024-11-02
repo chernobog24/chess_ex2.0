@@ -11,10 +11,22 @@ class TimerBar {
       }
     
       init() {
-        this.setupMessageListener();
-        this.createElements();
+        // Only create bar if we're on a monitored website
+        chrome.storage.sync.get(['websites'], (data) => {
+            if (data.websites) {
+                const currentUrl = window.location.hostname;
+                const isMonitored = data.websites.some(site => 
+                    currentUrl.includes(site.url)
+                );
+                
+                if (isMonitored) {
+                    this.setupMessageListener();
+                    this.createElements();
+                }
+            }
+        });
         console.log('TimerBar initialized');
-      }
+    }
 
       createElements() {
         if (!this.barElement) {

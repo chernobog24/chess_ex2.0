@@ -1,4 +1,4 @@
-#chessOverlay {
+.chess-puzzle-overlay #chessOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -10,7 +10,8 @@
   align-items: center;
   z-index: 9999;
 }
-#puzzleContainer {
+
+.chess-puzzle-overlay #puzzleContainer {
   background: white;
   padding: 30px;
   border-radius: 15px;
@@ -19,39 +20,46 @@
   flex-direction: column;
   align-items: center;
 }
-#sessionInfo {
+
+.chess-puzzle-overlay #sessionInfo {
   font-size: 16px;
   margin-bottom: 10px;
   color: #333;
   text-align: center;
 }
-#timerDisplay {
+
+.chess-puzzle-overlay #timerDisplay {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 20px;
   color: #333;
 }
-#chessboard {
+
+.chess-puzzle-overlay #chessboard {
   width: 600px;
   height: 600px;
   margin-bottom: 20px;
 }
-#puzzleInfo {
+
+.chess-puzzle-overlay #puzzleInfo {
   text-align: center;
   margin-top: 20px;
   font-family: Arial, sans-serif;
 }
-#puzzlePrompt {
+
+.chess-puzzle-overlay #puzzlePrompt {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 10px;
 }
-#puzzleElo {
+
+.chess-puzzle-overlay #puzzleElo {
   font-size: 16px;
   color: #666;
   margin-bottom: 10px;
 }
-.button {
+
+.chess-puzzle-overlay .button {
   padding: 10px 20px;
   font-size: 16px;
   background-color: #4CAF50;
@@ -61,37 +69,46 @@
   cursor: pointer;
   transition: background-color 0.3s;
 }
-.button:hover {
+
+.chess-puzzle-overlay .button:hover {
   background-color: #45a049;
 }
-.button:disabled {
+
+.chess-puzzle-overlay .button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }
-#closeOverlay {
+
+.chess-puzzle-overlay #closeOverlay {
   margin-top: 20px;
   margin-bottom: 10px;
 }
-#controlBar {
+
+.chess-puzzle-overlay #controlBar {
   display: flex;
   justify-content: space-between;
   width: 100%;
   margin-top: 20px;
 }
-#controlBar .button {
+
+.chess-puzzle-overlay #controlBar .button {
   flex: 1;
   margin: 0 5px;
 }
+
 .piece-417db {
   z-index: 10000 !important;
 }
-.highlight-green {
+
+.chess-puzzle-overlay .highlight-green {
   box-shadow: inset 0 0 3px 3px green;
 }
-.highlight-move {
+
+.chess-puzzle-overlay .highlight-move {
   background-color: rgba(255, 255, 0, 0.5) !important;
 }
-.highlight-square::before {
+
+.chess-puzzle-overlay .highlight-square::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -103,7 +120,8 @@
   border-radius: 50%;
   z-index: 10;
 }
-#solvedAnimation {
+
+.chess-puzzle-overlay #solvedAnimation {
   position: absolute;
   top: 50%;
   left: 50%;
