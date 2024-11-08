@@ -128,30 +128,39 @@ function calculateCurrentElo(website) {
 // Timer management
 function updateTimerBar(tabId, website) {
   const remainingTime = getTimerStatus(website.url);
+  const timer = state.websiteTimers[website.url];
   chrome.tabs.sendMessage(tabId, {
     target: 'timerBar',
     action: "updateTimerBar",
-    timeLeft: remainingTime * 60, // Convert minutes to seconds
-    totalTime: website.timePerSession * 60
+    timeLeft: remainingTime,
+    totalTime: timer ? timer.duration : (website.timePerSession * 60) // Use actual duration instead of max time
   });
 }
-function startTimer(website) {
+
+// In service-worker.js
+function startTimer(website, bonusTime = 0) {
   console.log(`Starting timer for website: ${website.url}`);
   if (state.websiteTimers[website.url]) {
     console.log(`Clearing existing timer for website ${website.url}`);
     clearTimeout(state.websiteTimers[website.url].timer);
   }
   
+  // Convert website.timePerSession from minutes to seconds for comparison
+  const maxSessionSeconds = website.timePerSession * 60;
+  // bonusTime is already in seconds from overlay
+  const timerDuration = Math.min(maxSessionSeconds, bonusTime);
+  
   state.websiteTimers[website.url] = {
     status: 'active',
     startTime: Date.now(),
+    duration: timerDuration, // Store in seconds
     timer: setTimeout(() => {
       console.log(`Timer expired for website ${website.url}`);
       state.websiteTimers[website.url].status = 'expired';
       notifyAllTabs(website.url);
-    }, website.timePerSession * 60 * 1000)
+    }, timerDuration * 1000) // Convert to milliseconds for setTimeout
   };
-  console.log(`Timer set for ${website.timePerSession} minutes`);
+  console.log(`Timer set for ${timerDuration} seconds (${timerDuration/60} minutes)`);
 }
 
 function getTimerStatus(websiteUrl) {
@@ -160,12 +169,10 @@ function getTimerStatus(websiteUrl) {
     console.log(`No active timer for website ${websiteUrl}`);
     return 0;
   }
-  const website = findMatchingWebsite(websiteUrl);
-  if (!website) return 0;
 
-  const elapsedTime = Date.now() - timer.startTime;
-  const remainingTime = Math.max(0, Math.round((website.timePerSession * 60 * 1000 - elapsedTime) / (60 * 1000)));
-  console.log(`Timer status for website ${websiteUrl}: ${remainingTime} minutes remaining`);
+  const elapsedTime = (Date.now() - timer.startTime) / 1000; // Convert to seconds
+  const remainingTime = Math.max(0, Math.round(timer.duration - elapsedTime));
+  console.log(`Timer status for website ${websiteUrl}: ${remainingTime} seconds remaining`);
   return remainingTime;
 }
 
@@ -198,7 +205,7 @@ function notifyAllTabs(websiteUrl) {
   });
 }
 
-// Message handling
+// Message 
 function handleMessage(request, sender, sendResponse) {
   console.log('Message received:', request);
   switch (request.action) {
@@ -221,7 +228,8 @@ function handleOverlayCompleted(sender, request, sendResponse) {
     const website = findMatchingWebsite(websiteUrl);
     if (website) {
       console.log(`Puzzle solved for website: ${website.url}`);
-      startTimer(website);
+      // Pass timeAdded in seconds to startTimer
+      startTimer(website, request.timeAdded);
       updateTimerBar(sender.tab.id, website);
       sendResponse({ status: "Timer started" });
     }

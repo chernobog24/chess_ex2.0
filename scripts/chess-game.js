@@ -53,6 +53,7 @@ class ChessGame {
     return move.from + move.to === expectedMove;
   }
 
+  
   makeNextMove() {
     if (this.isPuzzleSolved()) return;
 
